@@ -92,12 +92,12 @@ def set_language(message):
     ask_subscription(chat_id)
 
 # ====================== SUBSCRIPTION ======================
+# tekshirish uchun tugma qo'shdim
 def ask_subscription(chat_id):
     if chat_id == ADMIN_CHAT_ID:
         set_subscription(chat_id, True)
         show_main_buttons(chat_id)
         return
-
     try:
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/getChatMember?chat_id={CHANNEL_ID}&user_id={chat_id}"
         r = requests.get(url).json()
@@ -105,6 +105,7 @@ def ask_subscription(chat_id):
         if status in ["left", "kicked", ""]:
             markup = types.InlineKeyboardMarkup()
             markup.add(types.InlineKeyboardButton("🔗 Kanalga obuna bo‘lish", url=f"https://t.me/{YOUR_CHANNEL_USERNAME}"))
+            markup.add(types.InlineKeyboardButton("Tekshirish", callback_data="check"))
             bot.send_message(chat_id, "❗ Ob-havoni ko‘rish uchun kanalga obuna bo‘ling!", reply_markup=markup)
             return
         set_subscription(chat_id, True)
@@ -112,6 +113,35 @@ def ask_subscription(chat_id):
     except Exception as e:
         print("Subscription error:", e)
 
+# kanalda bormi yo'qmi tekshirish
+def check_subscription(chat_id):
+    try:
+        member = bot.get_chat_member(chat_id=CHANNEL_ID, user_id=chat_id)
+        if member.status not in ["member", "administrator", "creator"]:
+            return False
+    except Exception as e:
+        print("Xatolik: ", e)
+        return False
+    return True
+
+# tekshirish ga bosganda tekshiradi mavjud bo'sa o'tkizadi
+@bot.callback_query_handler(func=lambda call: call.data == "check")
+def verify_subscription(call):
+    user_id = call.from_user.id
+    if check_subscription(user_id):
+        bot.send_message(
+            user_id,
+            "✅ Raxmat! Endi botdan foydalanishingiz mumkin.\nTilni tanlang 👇"
+        )
+    else:
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("🔗 Kanalga obuna bo‘lish", url=f"https://t.me/{YOUR_CHANNEL_USERNAME}"))
+        markup.add(types.InlineKeyboardButton("Tekshirish", callback_data="check"))
+        bot.send_message(
+            user_id,
+            "❌ Hali barcha kanallarga a’zo emassiz. Iltimos, a’zo bo‘ling!",
+            reply_markup=markup
+        )
 # ====================== MAIN MENU ======================
 def show_main_buttons(chat_id):
     user = get_user(chat_id)
