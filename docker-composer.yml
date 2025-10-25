@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+  bot:
+    build: .
+    container_name: weather_bot
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - db
+    command: python main.py
+    networks:
+      - bot_network
+
+  db:
+    image: postgres:15
+    container_name: weather_db
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bot_network
+
+volumes:
+  postgres_data:
+
+networks:
+  bot_network:
+    driver: bridge
