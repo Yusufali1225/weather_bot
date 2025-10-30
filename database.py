@@ -1,9 +1,22 @@
+import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 
+# 🔹 Render DATABASE_URL dan ulanish
 def connect():
-    return psycopg2.connect(dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    if DATABASE_URL:
+        return psycopg2.connect(DATABASE_URL)
+    else:
+        # Lokal ishga tushirish uchun eski config usuli
+        from config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
+        return psycopg2.connect(
+            dbname=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            host=DB_HOST,
+            port=DB_PORT
+        )
 
 def create_tables():
     conn = connect()
@@ -34,7 +47,6 @@ def create_tables():
 def add_or_update_user(chat_id, username, first_name, language=None, subscribed=None):
     conn = connect()
     cur = conn.cursor()
-    # Build upsert
     cur.execute("""
     INSERT INTO users (chat_id, username, first_name, language, subscribed)
     VALUES (%s,%s,%s,%s,%s)
