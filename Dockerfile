@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 ENV PYTHONUNBUFFERED=1
 
 # ==== Run bot ====
-CMD ["python", "main.py"]
+CMD ["python3", "bot.py"]
